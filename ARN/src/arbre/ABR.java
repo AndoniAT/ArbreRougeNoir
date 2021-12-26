@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 
 
+
 /**
  * Implantation de l'interface Collection basÃ©e sur les arbres binaires de
  * recherche. Les Ã©lÃ©ments sont ordonnÃ©s soit en utilisant l'ordre naturel (cf
@@ -21,6 +22,11 @@ public class ABR<E> extends AbstractCollection<E> {
 	private Noeud racine;
 	private int taille;
 	private Comparator<? super E> cmp;
+	private static String R = "rouge";
+	private static String N = "noir";
+	private Noeud sentinelle = new Noeud();
+	private Noeud x;
+	private Noeud y;
 
 	// ====================== ARBRE ======================
 
@@ -29,7 +35,7 @@ public class ABR<E> extends AbstractCollection<E> {
 		 * Cree un arbre vide. Les Elements sont ordonnes selon l'ordre naturel
 		 */
 		public ABR() {
-			racine = null;
+			racine = sentinelle;
 			taille = 0;
 			//comp = (e1, e2) -> ((Comparable) e1).compareTo((Comparable) e2);
 			
@@ -72,14 +78,13 @@ public class ABR<E> extends AbstractCollection<E> {
 				}
 			};
 			
-			System.out.println("hola");
 			//ABR<E> abr2 = new ABR<>();
 			
 			ABRIterator it = (ABR<E>.ABRIterator) c.iterator();
 			
 			System.out.println(it.noeudIterator.cle);
 			
-			while(it.noeudIterator.estFilsDroit() || it.noeudIterator.estFilsGauche()) {
+			while(it.noeudIterator.pere.cle != null) {
 				it.next();
 			}
 			
@@ -217,15 +222,18 @@ public class ABR<E> extends AbstractCollection<E> {
 
 		@Override
 		public String toString() {
+			System.out.println("racineee " + racine.cle);
 			StringBuffer buf = new StringBuffer();
 			toString(racine, buf, "", maxStrLen(racine));
 			return buf.toString();
 		}
 
 		private void toString(Noeud x, StringBuffer buf, String path, int len) {
-			if (x == null)
+			if (x == null || x.cle == null) 
 				return;
+			
 			toString(x.droit, buf, path + "D", len);
+			
 			for (int i = 0; i < path.length(); i++) {
 				for (int j = 0; j < len + 6; j++)
 					buf.append(' ');
@@ -236,7 +244,7 @@ public class ABR<E> extends AbstractCollection<E> {
 					c = '|';
 				buf.append(c);
 			}
-			buf.append("-- " + x.cle.toString());
+			buf.append("-- " + x.cle.toString() + " " + x.couleur);
 			if (x.gauche != null || x.droit != null) {
 				buf.append(" --");
 				for (int j = x.cle.toString().length(); j < len; j++)
@@ -248,57 +256,128 @@ public class ABR<E> extends AbstractCollection<E> {
 		}
 
 		private int maxStrLen(Noeud x) {
-			return x == null ? 0 : Math.max(x.cle.toString().length(),
-					Math.max(maxStrLen(x.gauche), maxStrLen(x.droit)));
+			if(x == sentinelle || x.cle == null || x == null) {
+				return 0;
+			} else {
+				return Math.max(x.cle.toString().length(),
+						Math.max(maxStrLen(x.gauche), maxStrLen(x.droit)));
+			}
+						
 		}
 
 		// TODO : voir quelles autres methodes il faut surcharger
 		@Override
 		public boolean add(E e) {
-			if(racine == null) {
-				Noeud noeud = new Noeud(e);
-				racine = noeud;
-			} else {
-				if (cmp.compare(e, racine.cle) < 0) {
-					if(racine.gauche == null) {
-						Noeud noeud = new Noeud(e);
-						racine.gauche = noeud;
-						noeud.pere = racine;
-					} else {
-						ABR abrtmp = new ABR<>();
-						abrtmp.racine = racine.gauche;
-						abrtmp.add(e);
-					}
-					
-				} else if(e.equals(racine.cle)){
-							System.out.println("Element " + e + " déjà existant (Non ajouté)");
-							return false;
-					
-						} else {
-								if(racine.droit == null) {
-									Noeud noeud = new Noeud(e);
-									racine.droit= noeud;
-									noeud.pere = racine;
-								} else {
-									ABR abrtmp = new ABR<>();
-									abrtmp.racine = racine.droit;
-									abrtmp.add(e);
-							
-								}
-						
-						}
+			Noeud z = new Noeud(e);
 			
-			}
+			y = sentinelle;
+			x = racine;
 			
-			this.taille = this.taille + 1;
-			if(racine.cle.equals(5)) {
-				System.out.println("taille " + taille);
-			}
-			
-			return false;
+			while (x.cle != null) {
+			    y = x;
+			    x = cmp.compare(z.cle, racine.cle) < 0 ? x.gauche : x.droit;
+			  }
+			  z.pere = y;
+			  if (y.cle == null) { // arbre vide
+			    racine = z;
+			  } else {
+			    if (cmp.compare(z.cle, y.cle) < 0)
+			      y.gauche = z;
+			    else
+			      y.droit = z;
+			  }
+			  
+			  z.gauche = z.droit = sentinelle;
+			  z.couleur = R;
+			  ajouterCorrection(z);
+			  
+			  return false;
 			
 		}
 		
+		
+		public void ajouterCorrection(Noeud z) {	
+			while (z.pere.couleur == R) {
+			    // (*) La seule propriété RN violée est (4) : z et z.pere sont rouges
+			    if (z.pere == z.pere.pere.gauche) {
+			      y = z.pere.pere.droit; // l'oncle de z
+			      if (y.couleur == R) {
+			        // cas 1
+			        z.pere.couleur = N;
+			        y.couleur = N;
+			        z.pere.pere.couleur = R;
+			        z = z.pere.pere;
+			      } else {
+			        if (z == z.pere.droit) {
+			          // cas 2
+			          z = z.pere;
+			          rotationGauche(z);
+			        } //else if (z == z.pere.gauche) {
+				        // cas 3
+				        z.pere.couleur = N;
+				        z.pere.pere.couleur = R;
+				        rotationDroite(z.pere.pere);
+			        //}
+			        
+			      }
+			    } else {
+			      // idem en miroir, gauche <-> droite
+			      // cas 1', 2', 3'
+			    	 y = z.pere.pere.gauche; // l'oncle de z
+				      if (y.couleur == R) {
+				        // cas 1
+				        z.pere.couleur = N;
+				        y.couleur = N;
+				        z.pere.pere.couleur = R;
+				        z = z.pere.pere;
+				      } else {
+				        if (z == z.pere.gauche) {
+				          // cas 2
+				          z = z.pere;
+				          rotationDroite(z);
+				        } //else if (z == z.pere.gauche) {
+					        // cas 3
+					        z.pere.couleur = N;
+					        z.pere.pere.couleur = R;
+					        rotationGauche(z.pere.pere);
+				        //}
+				        
+				      }
+			    	
+			    }
+			  }
+			  // (**) La seule propriété (potentiellement) violée est (2)
+			  racine.couleur = N;
+		}
+		
+		
+		private boolean rotationDroite(Noeud noeud) {
+			Noeud y = noeud.gauche;
+			   noeud.gauche = y.droit;
+			   if(y.droit != null) y.droit.pere = noeud; // on ne change pas le pere de la sentinelle
+			   y.pere = noeud.pere;
+			   if (noeud.pere.cle == null) racine = y;
+			   else
+			      if( noeud.pere.droit == noeud) noeud.pere.droit = y;
+			      else noeud.pere.gauche = y;
+			   y.droit = noeud;
+			   noeud.pere = y;
+			return false;
+		}
+		
+		private boolean rotationGauche(Noeud noeud) {
+			Noeud y = noeud.droit;
+			noeud.droit = y.gauche;
+			if(y.gauche.cle != null) y.gauche.pere = noeud;// on ne change pas le parent de la sentinelle
+			   y.pere = noeud.pere;
+			   if (noeud.pere.cle == null) racine = y;
+			   else
+			      if( noeud.pere.gauche == noeud ) noeud.pere.gauche = y;
+			      else noeud.pere.droit = y;
+			   y.gauche = noeud;
+			   noeud.pere = y;
+			return false;
+		}
 	// ============================================
 
 		
@@ -310,12 +389,21 @@ public class ABR<E> extends AbstractCollection<E> {
 		Noeud gauche;
 		Noeud droit;
 		Noeud pere;
+		String couleur;
 
 		Noeud(E cle) {
 			this.cle = cle;
+			this.gauche = sentinelle;
+			this.droit = sentinelle;
+			this.pere = sentinelle;
+			this.couleur = R;
+		}
+		
+		Noeud() {
 			this.gauche = null;
 			this.droit = null;
 			this.pere = null;
+			this.couleur = N;
 		}
 
 		/**
@@ -326,7 +414,7 @@ public class ABR<E> extends AbstractCollection<E> {
 		 *         dans ce noeud
 		 */
 		Noeud minimum() {
-			if(ilyaFilsGauche()) {
+			if(ilyaFilsGauche() && this.gauche.cle != null) {
 				return this.gauche.minimum();
 			} else {
 				return this;
@@ -409,7 +497,7 @@ public class ABR<E> extends AbstractCollection<E> {
 		
 		private boolean estFilsGauche() {
 			if(estRacine()) {
-				return false;
+				return true;
 			}
 			
 			if(this == this.pere.gauche) {
@@ -421,7 +509,7 @@ public class ABR<E> extends AbstractCollection<E> {
 		
 		private boolean estFilsDroit() {
 			if(estRacine()) {
-				return false;
+				return true;
 			}
 			
 			if(this == this.pere.droit) {
@@ -432,7 +520,7 @@ public class ABR<E> extends AbstractCollection<E> {
 		}
 		
 		private boolean ilyaFilsDroit(){
-			if(this.droit != null) {
+			if(this.droit.cle != null) {
 				return true;
 			} else {
 				return false;
@@ -440,7 +528,7 @@ public class ABR<E> extends AbstractCollection<E> {
 		}
 		
 		private boolean ilyaFilsGauche(){
-			if(gauche != null) {
+			if(this.gauche.cle != null) {
 				return true;
 			} else {
 				return false;
@@ -448,7 +536,7 @@ public class ABR<E> extends AbstractCollection<E> {
 		}
 		
 		private boolean estRacine() {
-			if(pere == null) {
+			if(pere.cle == null) {
 				return true;
 			} else {
 				return false;
@@ -487,9 +575,7 @@ public class ABR<E> extends AbstractCollection<E> {
 		}
 		
 		public boolean hasNext() {
-
-			
-			if(noeudIterator.suivant() != noeudIterator) {
+			if(noeudIterator.suivant() != noeudIterator && noeudIterator.suivant().cle != null) {
 				return true;
 			} else {
 				return false;
@@ -497,7 +583,7 @@ public class ABR<E> extends AbstractCollection<E> {
 		}
 		
 		public boolean hasPrec() {
-			if(noeudIterator.precedent() != noeudIterator) {
+			if(noeudIterator.precedent() != noeudIterator && noeudIterator.precedent().cle != null) {
 				return true;
 			} else {
 				return false;
@@ -511,7 +597,7 @@ public class ABR<E> extends AbstractCollection<E> {
 				
 				prec = noeudIterator;
 				noeudIterator = noeudIterator.suivant();
-				System.out.println("Antes : " + prec.cle + "  - Despues : " + noeudIterator.cle);
+				//System.out.println("Antes : " + prec.cle + "  - Despues : " + noeudIterator.cle);
 			}
 			return noeudIterator.cle;
 		}
