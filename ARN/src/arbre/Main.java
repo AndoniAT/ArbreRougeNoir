@@ -12,8 +12,15 @@ public class Main {
 		
 		abr.add(20);
 		abr.add(25);
+		abr.add(30);
+		abr.add(32);
+		abr.add(35);
 		abr.add(22);
 		
+		Iterator<Integer> it = abr.iterator();
+		it.next();
+		it.next();
+		it.remove();
 		
 		
 		System.out.println(abr.toString());

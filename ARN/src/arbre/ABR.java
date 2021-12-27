@@ -161,12 +161,13 @@ public class ABR<E> extends AbstractCollection<E> {
 					
 			do {
 				if(abrIterator.noeudIterator.cle.equals(o)) 
-				return abrIterator.noeudIterator;
+					return abrIterator.noeudIterator;
 				
 				if (!abrIterator.hasNext())
-				break;
+					break;
 					
 				abrIterator.next();
+				System.out.println("next : " + abrIterator.noeudIterator.cle);
 					
 			} while(abrIterator.hasPrec());
 					 			
@@ -184,7 +185,7 @@ public class ABR<E> extends AbstractCollection<E> {
 		 *         {@link Iterator#remove()}
 		 */
 		private Noeud supprimer(Noeud z) {
-			Noeud y = null;
+			/*Noeud y = null;
 			Noeud x = racine;
 			
 			if (z.gauche == null || z.droit == null)
@@ -213,8 +214,110 @@ public class ABR<E> extends AbstractCollection<E> {
 			  if (y != z) z.cle = y.cle;
 			  	y = null;
 			  	
-			  return null;
+			  return null;*/
+			
+			  if (z.gauche.cle == null || z.droit.cle == null)
+				    y = z;
+				  else
+				    y = z.suivant();
+				  // y est le nœud à détacher
+
+				  if (y.gauche.cle != null)
+				    x = y.gauche;
+				  else
+				    x = y.droit;
+				  // x est le fils unique de y ou la sentinelle si y n'a pas de fils
+
+				  x.pere = y.pere; // inconditionnelle
+
+				  if (y.pere.cle == null) { // suppression de la racine
+				    racine = x;
+				  } else {
+				    if (y == y.pere.gauche)
+				      y.pere.gauche = x;
+				    else
+				      y.pere.droit = x;
+				  }
+
+				  if (y != z) z.cle = y.cle;
+				  if (y.couleur == N) supprimerCorrection(x);
+				  y = null;
+				  
+				  return null;
+
+				  
 		}
+		
+		public void supprimerCorrection(Noeud x) {
+			 Noeud w;
+			  while (x != racine && x.couleur == N) {
+			    // (*) est vérifié ici
+			    if (x == x.pere.gauche) {
+			      w = x.pere.droit; // le frère de x
+			      if (w.couleur == R) {
+			        // cas 1
+			        w.couleur = N;
+			        x.pere.couleur = R;
+			        rotationGauche(x.pere);
+			        w = x.pere.droit;
+			      }
+			      if (w.gauche.couleur == N && w.droit.couleur == N) {
+			        // cas 2
+			        w.couleur = R;
+			        x = x.pere;
+			      } else {
+			        if (w.droit.couleur == N) {
+			          // cas 3
+			          w.gauche.couleur = N;
+			          w.couleur = R;
+			          rotationDroite(w);
+			          w = x.pere.droit;
+			        }
+			        // cas 4
+			        w.couleur = x.pere.couleur;
+			        x.pere.couleur = N;
+			        w.droit.couleur = N;
+			        rotationGauche(x.pere);
+			        x = racine;
+			      }
+			    } else {
+			      // idem en miroir, gauche <-> droite
+			      // cas 1', 2', 3', 4'
+			    	
+			    	 w = x.pere.gauche; // le frère de x
+				      if (w.couleur == R) {
+				        // cas 1
+				        w.couleur = N;
+				        x.pere.couleur = R;
+				        rotationDroite(x.pere);
+				        w = x.pere.gauche;
+				      }
+				      if (w.droit.couleur == N && w.gauche.couleur == N) {
+				        // cas 2
+				        w.couleur = R;
+				        x = x.pere;
+				      } else {
+				        if (w.gauche.couleur == N) {
+				          // cas 3
+				          w.droit.couleur = N;
+				          w.couleur = R;
+				          rotationGauche(w);
+				          w = x.pere.gauche;
+				        }
+				        // cas 4
+				        w.couleur = x.pere.couleur;
+				        x.pere.couleur = N;
+				        w.gauche.couleur = N;
+				        rotationDroite(x.pere);
+				        x = racine;
+				      }
+			    }
+			  }
+			  // (**) est vérifié ici
+			  x.couleur = N;
+			}
+
+		
 	
 	
 		
@@ -222,7 +325,6 @@ public class ABR<E> extends AbstractCollection<E> {
 
 		@Override
 		public String toString() {
-			System.out.println("racineee " + racine.cle);
 			StringBuffer buf = new StringBuffer();
 			toString(racine, buf, "", maxStrLen(racine));
 			return buf.toString();
@@ -469,7 +571,7 @@ public class ABR<E> extends AbstractCollection<E> {
 		 */
 		Noeud precedent() {
 			Noeud noeudRacine  = this;
-			while(noeudRacine.pere != null) {
+			while(noeudRacine.pere.cle != null) {
 				noeudRacine = noeudRacine.pere;
 			}
 
@@ -597,7 +699,7 @@ public class ABR<E> extends AbstractCollection<E> {
 				
 				prec = noeudIterator;
 				noeudIterator = noeudIterator.suivant();
-				//System.out.println("Antes : " + prec.cle + "  - Despues : " + noeudIterator.cle);
+				System.out.println("Antes : " + prec.cle + "  - Despues : " + noeudIterator.cle);
 			}
 			return noeudIterator.cle;
 		}
