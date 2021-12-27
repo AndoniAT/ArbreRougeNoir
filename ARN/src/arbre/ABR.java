@@ -53,7 +53,7 @@ public class ABR<E> extends AbstractCollection<E> {
 		 * @param cmp le comparateur utilise pour definir l'ordre des Elements
 		 */
 		public ABR(Comparator<? super E> cmp) {
-			racine = null;
+			racine = sentinelle;
 			taille = 0;
 			
 			this.cmp = cmp;
@@ -68,7 +68,7 @@ public class ABR<E> extends AbstractCollection<E> {
 		 *            la collection à  copier
 		 */
 		public ABR(Collection<? extends E> c) {
-			racine = null;
+			racine = sentinelle;
 			taille = 0;
 			//comp = (e1, e2) -> ((Comparable) e1).compareTo((Comparable) e2);
 			
@@ -81,8 +81,6 @@ public class ABR<E> extends AbstractCollection<E> {
 			//ABR<E> abr2 = new ABR<>();
 			
 			ABRIterator it = (ABR<E>.ABRIterator) c.iterator();
-			
-			System.out.println(it.noeudIterator.cle);
 			
 			while(it.noeudIterator.pere.cle != null) {
 				it.next();
@@ -185,37 +183,6 @@ public class ABR<E> extends AbstractCollection<E> {
 		 *         {@link Iterator#remove()}
 		 */
 		private Noeud supprimer(Noeud z) {
-			/*Noeud y = null;
-			Noeud x = racine;
-			
-			if (z.gauche == null || z.droit == null)
-			    y = z;
-			  else
-			    y = z.suivant();
-			    // y est le nœud à détacher
-
-			  if (y.gauche != null)
-			    x = y.gauche;
-			  else
-			    x = y.droit;
-			    // x est le fils unique de y ou null si y n'a pas de fils
-
-			  if (x != null) x.pere = y.pere;
-
-			  if (y.pere == null) { // suppression de la racine
-			    racine = x;
-			  } else {
-			    if (y == y.pere.gauche)
-			      y.pere.gauche = x;
-			    else
-			      y.pere.droit = x;
-			  }
-
-			  if (y != z) z.cle = y.cle;
-			  	y = null;
-			  	
-			  return null;*/
-			
 			  if (z.gauche.cle == null || z.droit.cle == null)
 				    y = z;
 				  else
@@ -242,7 +209,8 @@ public class ABR<E> extends AbstractCollection<E> {
 				  if (y != z) z.cle = y.cle;
 				  if (y.couleur == N) supprimerCorrection(x);
 				  y = null;
-				  
+				  taille = taille - 1;
+				  System.out.println(taille);
 				  return null;
 
 				  
@@ -393,6 +361,7 @@ public class ABR<E> extends AbstractCollection<E> {
 			  z.couleur = R;
 			  ajouterCorrection(z);
 			  
+			  taille++;
 			  return false;
 			
 		}

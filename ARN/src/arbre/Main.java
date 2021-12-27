@@ -24,6 +24,13 @@ public class Main {
 		
 		
 		System.out.println(abr.toString());
+		
+		ABR<Integer> abr2 = new ABR<>(abr);
+		
+		
+		System.out.println(abr.toString());
+		System.out.println(abr2.toString());
+
 	}
 
 }
