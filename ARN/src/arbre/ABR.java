@@ -238,6 +238,7 @@ public class ABR<E> extends AbstractCollection<E> {
 			          // cas 3
 			          w.gauche.couleur = N;
 			          w.couleur = R;
+			          
 			          rotationDroite(w);
 			          w = x.pere.droit;
 			        }
@@ -255,6 +256,7 @@ public class ABR<E> extends AbstractCollection<E> {
 			    	 w = x.pere.gauche; // le frère de x
 				      if (w.couleur == R) {
 				        // cas 1
+				    	System.out.println("este" + w.cle);
 				        w.couleur = N;
 				        x.pere.couleur = R;
 				        rotationDroite(x.pere);
@@ -342,11 +344,13 @@ public class ABR<E> extends AbstractCollection<E> {
 			
 			y = sentinelle;
 			x = racine;
-			
+			System.out.println("Ajouter : " + e);
 			while (x.cle != null) {
 			    y = x;
-			    x = cmp.compare(z.cle, racine.cle) < 0 ? x.gauche : x.droit;
-			  }
+			    //System.out.println("soy x = " + x.cle);
+			    x = cmp.compare(z.cle, x.cle) < 0 ? x.gauche : x.droit;
+			    //System.out.println("soy x = " + x.cle);
+			}
 			  z.pere = y;
 			  if (y.cle == null) { // arbre vide
 			    racine = z;
@@ -367,86 +371,113 @@ public class ABR<E> extends AbstractCollection<E> {
 		}
 		
 		
+		
 		public void ajouterCorrection(Noeud z) {	
-			while (z.pere.couleur == R) {
-			    // (*) La seule propriété RN violée est (4) : z et z.pere sont rouges
-			    if (z.pere == z.pere.pere.gauche) {
-			      y = z.pere.pere.droit; // l'oncle de z
-			      if (y.couleur == R) {
+			while (z.pere.estRouge()) { //  // tant que le père est rouge
+			     
+				// Z rouge e son père rouge, nous avons donce Propriété violée : 4 : deux noeuds rouges
+			    
+				if (z.pere.estFilsGauche()) {       // Si le pere est un fils gauche
+			      y = z.pere.pere.droit;            // y est l'oncle de z 
+			      
+			      if (y.estRouge()) {            // Si sa couleur est rouge
 			        // cas 1
-			        z.pere.couleur = N;
-			        y.couleur = N;
-			        z.pere.pere.couleur = R;
-			        z = z.pere.pere;
-			      } else {
-			        if (z == z.pere.droit) {
+			        z.pere.couleur = N;            // Changer la couleur du pere de z a noire
+			        y.couleur = N;                 // Et celle du y aussi
+			        z.pere.pere.couleur = R;       // La couleur de grand pere de z sera rouge
+			        z = z.pere.pere;               // z devient son oncle
+			      } else {                         //
+			        if (z.estFilsDroit()) {       // Si z estFils Droit 
+			        	
 			          // cas 2
-			          z = z.pere;
-			          rotationGauche(z);
-			        } //else if (z == z.pere.gauche) {
+			          z = z.pere;					// z devient sont père 					
+			          rotationGauche(z);		    // Et on fait la rotation 
+			        } 
 				        // cas 3
-				        z.pere.couleur = N;
-				        z.pere.pere.couleur = R;
-				        rotationDroite(z.pere.pere);
-			        //}
-			        
+				        z.pere.couleur = N;			 // La couleur du père est noir
+				        z.pere.pere.couleur = R;     // La couleur du grand père est rouge
+				        rotationDroite(z.pere.pere); // Une fois que l'on a changé les couleurs nous pouvons faire la rotation
 			      }
 			    } else {
-			      // idem en miroir, gauche <-> droite
-			      // cas 1', 2', 3'
-			    	 y = z.pere.pere.gauche; // l'oncle de z
-				      if (y.couleur == R) {
-				        // cas 1
-				        z.pere.couleur = N;
-				        y.couleur = N;
-				        z.pere.pere.couleur = R;
-				        z = z.pere.pere;
+			      // même chose mais à droit
+			      // On verifie les mêmes cas
+			    	 y = z.pere.pere.gauche;          // l'oncle de z
+				      if (y.estRouge()) {			 // On verifie si y est rouge
+				        
+				    	// cas 1
+				        z.pere.couleur = N;            // La nouvelle couleur du père de z est noir
+				        y.couleur = N;				  // le nouvelle couleur de y est noir
+				        z.pere.pere.couleur = R;	 // La couleur du gran père devient rouge
+				        z = z.pere.pere;			 // z est desormais son gran père
 				      } else {
-				        if (z == z.pere.gauche) {
+				        if (z.estFilsGauche()) {    // si z est gauche 
+				          
 				          // cas 2
-				          z = z.pere;
-				          rotationDroite(z);
-				        } //else if (z == z.pere.gauche) {
+				          z = z.pere;  				// z est le pere
+				          rotationDroite(z);		// et on fait une rotation droite
+				        }
+				        	// Si z n'est pas fils gauche ou une fois que l'on a fait la roation droite correspondant
+				        	// on peut changer les couleurs
 					        // cas 3
-					        z.pere.couleur = N;
-					        z.pere.pere.couleur = R;
-					        rotationGauche(z.pere.pere);
-				        //}
+					        z.pere.couleur = N;         // la couleur du pere de z est noire
+					        z.pere.pere.couleur = R;    // et la couleur du grand pere de z est rouge
+					        rotationGauche(z.pere.pere); // On peur donc faire une rotation a gauche en envoyant le grand père de z
 				        
 				      }
 			    	
 			    }
 			  }
-			  // (**) La seule propriété (potentiellement) violée est (2)
-			  racine.couleur = N;
+			  // Popriété violée : 2
+			  
+			racine.couleur = N; // La racine doit être tjrs noire
 		}
 		
 		
 		private boolean rotationDroite(Noeud noeud) {
-			Noeud y = noeud.gauche;
-			   noeud.gauche = y.droit;
-			   if(y.droit != null) y.droit.pere = noeud; // on ne change pas le pere de la sentinelle
-			   y.pere = noeud.pere;
-			   if (noeud.pere.cle == null) racine = y;
-			   else
-			      if( noeud.pere.droit == noeud) noeud.pere.droit = y;
-			      else noeud.pere.gauche = y;
-			   y.droit = noeud;
-			   noeud.pere = y;
+			System.out.println("D");
+			Noeud y = noeud.gauche;                   // y prend la le noeud qui es a gauche du noeud envoyé
+			   noeud.gauche = y.droit;                // le noueveau gauche de noeud c'est le fils droit de y
+			   
+			   if(!y.droit.estSentinelle()) {              // Nous verifions que le droit n'est pas la sentinnelle  
+				   y.droit.pere = noeud;              // on ne change pas le pere de la sentinelle
+			   }
+			   
+			   y.pere = noeud.pere;                   // le pere de y est desormais le pere du noeud
+			   
+			   if (noeud.pere.estSentinelle()) {          // Nous verifions que noeud est la recine : si le de du noeud n'est pas la sentinnelle           
+				   racine = y;					 	  // Si c'est le cas la nouvelle racine sera y
+			   
+			   } else if( noeud.estFilsDroit()) {     //Si le noeud est fils droit
+			    	  noeud.pere.droit = y;  		  // le nouvele droit du pere sera y     
+			      }else {
+			    	  noeud.pere.gauche = y;  	      // Sinon le nouvel gauche du père sera y
+			      }
+			   
+			   y.droit = noeud;  					  // le droit du y est le noeud
+			   noeud.pere = y;						  // le nouveau pere de noeud est y et la rotation est complète
 			return false;
 		}
 		
 		private boolean rotationGauche(Noeud noeud) {
-			Noeud y = noeud.droit;
-			noeud.droit = y.gauche;
-			if(y.gauche.cle != null) y.gauche.pere = noeud;// on ne change pas le parent de la sentinelle
-			   y.pere = noeud.pere;
-			   if (noeud.pere.cle == null) racine = y;
-			   else
-			      if( noeud.pere.gauche == noeud ) noeud.pere.gauche = y;
-			      else noeud.pere.droit = y;
-			   y.gauche = noeud;
-			   noeud.pere = y;
+			System.out.println("G");
+			Noeud y = noeud.droit; 							//  y est le droit du noeud envoyé						                     
+			noeud.droit = y.gauche;						    // le nouveau droit du noeud est le gauche de y
+			
+			if(!y.gauche.estSentinelle()) {						// On verifie si le gauche de y n'est pas la sentinelle 
+				y.gauche.pere = noeud; 						// on ne change pas le parent de la sentinelle
+			}
+			 y.pere = noeud.pere;							// Apres le nouveau père de y est le père du noeud
+			   if (noeud.estRacine()) { 				    // On verifie si noeud est la racine
+				   racine = y;								// Si c'est le cas la nouvelle racine est le noeud y
+			   }
+			   else if( noeud.estFilsGauche()) {            // si le noeud est un fils gauche 
+			    	  noeud.pere.gauche = y;				// le nouveu gauche du noeud est y
+			      }
+			      else {									// S'il n'est pas un fils gauche
+			    	  noeud.pere.droit = y;					// le nouveau droit du père est y
+			      }
+			   y.gauche = noeud;							// le nouveau gauche de y est le noeud
+			   noeud.pere = y;								// le nouveau pere de noeud est y
 			return false;
 		}
 	// ============================================
@@ -477,6 +508,7 @@ public class ABR<E> extends AbstractCollection<E> {
 			this.couleur = N;
 		}
 
+		
 		/**
 		 * Renvoie le noeud contenant la cle minimale du sous-arbre enracine
 		 * dans ce noeud
@@ -565,6 +597,22 @@ public class ABR<E> extends AbstractCollection<E> {
 			}
 		}
 		
+		public boolean estRouge() {
+			if(couleur == R) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
+		public boolean estSentinelle() {
+			if(cle == null) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
 		
 		private boolean estFilsGauche() {
 			if(estRacine()) {
@@ -577,6 +625,8 @@ public class ABR<E> extends AbstractCollection<E> {
 				return false;
 			}
 		}
+		
+		
 		
 		private boolean estFilsDroit() {
 			if(estRacine()) {
@@ -668,7 +718,7 @@ public class ABR<E> extends AbstractCollection<E> {
 				
 				prec = noeudIterator;
 				noeudIterator = noeudIterator.suivant();
-				System.out.println("Antes : " + prec.cle + "  - Despues : " + noeudIterator.cle);
+				System.out.println("Avant : " + prec.cle + "  - Apres : " + noeudIterator.cle);
 			}
 			return noeudIterator.cle;
 		}
