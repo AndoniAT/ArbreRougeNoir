@@ -183,33 +183,41 @@ public class ABR<E> extends AbstractCollection<E> {
 		 *         {@link Iterator#remove()}
 		 */
 		private Noeud supprimer(Noeud z) {
-			  if (z.gauche.cle == null || z.droit.cle == null)
-				    y = z;
-				  else
-				    y = z.suivant();
-				  // y est le nœud à détacher
+			  if (z.gauche.estSentinelle() || z.droit.estSentinelle()) { // si z a au moins une sentinnelle
+				  y = z;												// y est le noeud z
+			  } else {
+				  y = z.suivant();				  						// y est le nœud à détacher 
+			  }
+			  if (!y.gauche.estSentinelle()) {							// Si le gauche de y n'est pas la sentinelle
+				  x = y.gauche;											 // x sera le gauche de y		
+			  } else {
+				  x = y.droit; 				      						// x fils  unique de y ou la sentinelle si y n'a pas de fils
+			  }
+				    
+			  x.pere = y.pere;											// le pere de z sera le pere de y
 
-				  if (y.gauche.cle != null)
-				    x = y.gauche;
-				  else
-				    x = y.droit;
-				  // x est le fils unique de y ou la sentinelle si y n'a pas de fils
-
-				  x.pere = y.pere; // inconditionnelle
-
-				  if (y.pere.cle == null) { // suppression de la racine
-				    racine = x;
+			  if (y.estRacine()) { 										// suppression de la racine
+				    racine = x;											// la racien sera x
 				  } else {
-				    if (y == y.pere.gauche)
-				      y.pere.gauche = x;
-				    else
-				      y.pere.droit = x;
+				    if (y.estFilsGauche()) {							// si y est gauche
+				    	y.pere.gauche = x;							   // le gauche du pere est x
+				    }
+				    else {
+				    	y.pere.droit = x;								// le droit du pere est x
+				    }
+				      
 				  }
 
-				  if (y != z) z.cle = y.cle;
-				  if (y.couleur == N) supprimerCorrection(x);
-				  y = null;
-				  taille = taille - 1;
+				  if (y != z) {										 // si y et z sont diff
+					  z.cle = y.cle;								// On remplace les clés et le noeud a supprimer sera y et pas z
+				  }
+				  
+				  if (!y.estRouge()) {								// si y est noir
+					  supprimerCorrection(x);						// faire une correction
+				  }
+				  	
+				  y = null;											// On peut supprimer y 
+				  taille = taille - 1;								// noeud supprimer, mettre a jour notre compteur
 				  System.out.println(taille);
 				  return null;
 
